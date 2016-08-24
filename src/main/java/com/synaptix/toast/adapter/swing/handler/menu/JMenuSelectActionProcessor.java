@@ -26,7 +26,8 @@ class JMenuSelectActionProcessor implements ActionProcessor<JMenu> {
 			robot.click(target);
 		}
 		JPopupMenuFixture popupFixture = new JPopupMenuFixture(robot, robot.findActivePopupMenu());
-		JMenuItemFixture menuItemWithPath = popupFixture.menuItemWithPath(command.value);
+		String[] menuPath = computeMenuItemFixturePath(command.value);
+		JMenuItemFixture menuItemWithPath = popupFixture.menuItemWithPath(menuPath);
 		if(menuItemWithPath != null && menuItemWithPath.component().isEnabled()) {
 			menuItemWithPath.click();
 			return ITestResult.ResultKind.SUCCESS.name();
@@ -34,5 +35,18 @@ class JMenuSelectActionProcessor implements ActionProcessor<JMenu> {
 		else {
 			return ITestResult.ResultKind.FAILURE.name();
 		}
+	}
+	
+	public static final String[] computeMenuItemFixturePath(String commandValue){
+		String[] itemPath = null;
+		if(commandValue==null){
+			return null;
+		}
+		if(commandValue.contains(" / ")){
+			itemPath = commandValue.split(" / ");
+		} else {
+			itemPath = new String[]{commandValue};
+		}
+		return itemPath;
 	}
 }

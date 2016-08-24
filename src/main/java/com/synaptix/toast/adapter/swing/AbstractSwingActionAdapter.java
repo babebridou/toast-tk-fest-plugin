@@ -210,9 +210,16 @@ public abstract class AbstractSwingActionAdapter {
 			return new TestResult();
 		}
 		SwingAutoUtils.confirmExist(driver, locator[0], AutoSwingType.menu.name());
+		String submenuPath = menu.substring(menu.indexOf(" / ")+3);
+		System.out.println("Select Menu Path command : ");
+		for(int i = 0; i<locator.length;i++){
+			System.out.println("locator["+i+"]: "+locator[i]);
+		}
+		System.out.println("Menu:" + menu);
+		System.out.println(" submenuPath: "+ submenuPath);
 		CommandRequest request = new CommandRequest.CommandRequestBuilder(UUID.randomUUID().toString())
 			.with(locator[0])
-			.ofType(AutoSwingType.menu.name()).select(locator[1]).build();
+			.ofType(AutoSwingType.menu.name()).select(submenuPath).build();
 		ITestResult waitForValue = driver.processAndWaitForValue(request);
 		return waitForValue.isError() ? new FailureResult("Menu {" + menu + "} not found !"): new SuccessResult();
 	}

@@ -18,8 +18,6 @@ import io.toast.tk.core.net.request.TableCommandRequest;
 
 public class DefaultSwingCustomWidgetHandler implements ICustomRequestHandler {
 
-	private static final Logger LOG = LogManager.getLogger(DefaultSwingCustomWidgetHandler.class);
-
 	@Override
 	public String hanldeFixtureCall(
 		Component component,
@@ -58,6 +56,11 @@ public class DefaultSwingCustomWidgetHandler implements ICustomRequestHandler {
 		return SwingWidgetActionHandlerFactory.getInstance().hasHandlerFor(component.getClass());
 	}
 
+	@Override
+	public Set<Class<?>> getComponentsWhiteList() {
+		return null;
+	}
+
 	static List<String> list = Collections.unmodifiableList(Arrays.asList(
 		CommandRequest.class.getName(),
 		TableCommandRequest.class.getName()));
@@ -67,9 +70,4 @@ public class DefaultSwingCustomWidgetHandler implements ICustomRequestHandler {
 		return list;
 	}
 
-	@Override
-	public Set<Class<?>> getComponentsWhiteList() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

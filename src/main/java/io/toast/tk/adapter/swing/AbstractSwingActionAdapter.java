@@ -5,6 +5,7 @@ import static io.toast.tk.core.adapter.ActionAdapterSentenceRef.ClickOnIn;
 import static io.toast.tk.core.adapter.ActionAdapterSentenceRef.GetComponentValue;
 import static io.toast.tk.core.adapter.ActionAdapterSentenceRef.SWING_COMPONENT_REGEX;
 import static io.toast.tk.core.adapter.ActionAdapterSentenceRef.SelectContectualMenu;
+import static io.toast.tk.core.adapter.ActionAdapterSentenceRef.OpenContectualMenu;
 import static io.toast.tk.core.adapter.ActionAdapterSentenceRef.SelectMenuPath;
 import static io.toast.tk.core.adapter.ActionAdapterSentenceRef.SelectSubMenu;
 import static io.toast.tk.core.adapter.ActionAdapterSentenceRef.SelectTableRow;
@@ -21,6 +22,7 @@ import java.util.UUID;
 
 import io.toast.tk.adapter.constant.Property;
 import io.toast.tk.adapter.swing.component.SwingButtonElement;
+import io.toast.tk.adapter.swing.component.SwingCheckBoxElement;
 import io.toast.tk.adapter.swing.component.SwingDateElement;
 import io.toast.tk.adapter.swing.component.SwingInputElement;
 import io.toast.tk.adapter.swing.component.SwingListElement;
@@ -40,6 +42,7 @@ import io.toast.tk.core.net.request.TableCommandRequestQueryCriteria;
 import io.toast.tk.core.runtime.IFeedableSwingPage;
 import io.toast.tk.dao.core.report.FailureResult;
 import io.toast.tk.dao.core.report.SuccessResult;
+import io.toast.tk.dao.core.report.TestResult;
 import io.toast.tk.dao.domain.api.test.ITestResult;
 import io.toast.tk.runtime.IActionItemRepository;
 
@@ -84,6 +87,15 @@ public abstract class AbstractSwingActionAdapter {
 		else if(pageField instanceof SwingDateElement) {
 			SwingDateElement input = (SwingDateElement) pageField;
 			return input.setDateText(text);
+		}
+		else if(pageField instanceof SwingCheckBoxElement) {
+			SwingCheckBoxElement input = (SwingCheckBoxElement) pageField;
+			Boolean selected = Boolean.valueOf(text);
+			if(selected){
+				return  input.select();
+			}else{
+				return  input.deselect();
+			}
 		}
 		else {
 			throw new IllegalAccessException(String.format(
@@ -194,10 +206,20 @@ public abstract class AbstractSwingActionAdapter {
 		String menu)
 		throws Exception {
 		String[] locator = menu.split(" / ");
+		if(locator.length < 2){
+			return new TestResult();
+		}
 		SwingAutoUtils.confirmExist(driver, locator[0], AutoSwingType.menu.name());
+		String submenuPath = menu.substring(menu.indexOf(" / ")+3);
+		System.out.println("Select Menu Path command : ");
+		for(int i = 0; i<locator.length;i++){
+			System.out.println("locator["+i+"]: "+locator[i]);
+		}
+		System.out.println("Menu:" + menu);
+		System.out.println(" submenuPath: "+ submenuPath);
 		CommandRequest request = new CommandRequest.CommandRequestBuilder(UUID.randomUUID().toString())
 			.with(locator[0])
-			.ofType(AutoSwingType.menu.name()).select(locator[1]).build();
+			.ofType(AutoSwingType.menu.name()).select(submenuPath).build();
 		ITestResult waitForValue = driver.processAndWaitForValue(request);
 		return waitForValue.isError() ? new FailureResult("Menu {" + menu + "} not found !"): new SuccessResult();
 	}
@@ -207,14 +229,33 @@ public abstract class AbstractSwingActionAdapter {
 		throws Exception {
 		return clickOnIn(elementField, containerField);
 	}
+	
+	
+	@Action(action = OpenContectualMenu, description = "Ouvre un menu contextuel")
+	public ITestResult openContextualMenu(SwingAutoElement pageField) throws Exception {
+		AutoSwingType type = pageField.getWrappedElement().getType();
+		String uid = UUID.randomUUID().toString();
+		CommandRequest commandRequest = new CommandRequest
+				.CommandRequestBuilder(uid).
+				with(pageField.getWrappedElement().getLocator()).
+				ofType(type.name()).openMenu().build();
+		ITestResult result = driver.processAndWaitForValue(commandRequest);
+		return result;
+	}
 
 	@Action(action = SelectValueInList, description = "Selectionner une valeur dans une liste")
 	public ITestResult selectIn(
 		String value,
 		SwingAutoElement pageField)
 		throws Exception {
-		SwingListElement list = (SwingListElement) pageField;
-		list.select(value);
+		if(pageField instanceof SwingListElement){
+			SwingListElement list = (SwingListElement) pageField;
+			list.select(value);			
+		}else if (pageField instanceof SwingInputElement){
+			typeIn(value, pageField);
+		}else{
+			return new FailureResult();
+		}
 		return new SuccessResult();
 	}
 

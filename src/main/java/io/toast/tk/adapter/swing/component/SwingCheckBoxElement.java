@@ -11,7 +11,7 @@ import io.toast.tk.core.runtime.ISwingElementDescriptor;
 import io.toast.tk.dao.domain.api.test.ITestResult;
 import io.toast.tk.dao.domain.api.test.ITestResult.ResultKind;
 
-public class SwingCheckBoxElement extends SwingAutoElement implements HasClickAction, HasStringValue {
+public class SwingCheckBoxElement extends SwingAutoElement implements HasClickAction,  HasStringValue {
 
 	public SwingCheckBoxElement(
 		ISwingElementDescriptor element,
@@ -24,28 +24,34 @@ public class SwingCheckBoxElement extends SwingAutoElement implements HasClickAc
 		super(element);
 	}
 
-	public void select()
+	public ITestResult select()
 		throws Exception {
-		exists();
-		frontEndDriver.process(new CommandRequest.CommandRequestBuilder(null).with(wrappedElement.getLocator())
+		boolean exists = exists();
+		final String requestId = UUID.randomUUID().toString();
+		ITestResult result = frontEndDriver.processAndWaitForValue(new CommandRequest.CommandRequestBuilder(requestId).with(wrappedElement.getLocator())
 			.ofType(wrappedElement.getType().name()).sendKeys("true").build());
+		result.setResultKind(exists && result.getMessage().equals(ResultKind.SUCCESS.name()) ? ResultKind.SUCCESS : ResultKind.ERROR);
+		return result;
 	}
 
-	public void deselect()
+	public ITestResult deselect()
 		throws Exception {
-		exists();
-		frontEndDriver.process(new CommandRequest.CommandRequestBuilder(null).with(wrappedElement.getLocator())
+		boolean exists = exists();
+		final String requestId = UUID.randomUUID().toString();
+		ITestResult result = frontEndDriver.processAndWaitForValue(new CommandRequest.CommandRequestBuilder(requestId).with(wrappedElement.getLocator())
 			.ofType(wrappedElement.getType().name()).sendKeys("false").build());
+		result.setResultKind(exists && result.getMessage().equals(ResultKind.SUCCESS.name()) ? ResultKind.SUCCESS : ResultKind.ERROR);
+		return result;
 	}
 
 	@Override
 	public ITestResult click()
 		throws Exception{
-		boolean res = exists();
+		boolean exists = exists();
 		final String requestId = UUID.randomUUID().toString();
 		ITestResult result = frontEndDriver.processAndWaitForValue(new CommandRequest.CommandRequestBuilder(requestId).with(wrappedElement.getLocator())
 				.ofType(wrappedElement.getType().name()).click().build());
-		result.setResultKind(res && result.getMessage().equals(ResultKind.SUCCESS.name()) ? ResultKind.SUCCESS : ResultKind.ERROR);
+		result.setResultKind(exists && result.getMessage().equals(ResultKind.SUCCESS.name()) ? ResultKind.SUCCESS : ResultKind.ERROR);
 		return result;
 	}
 

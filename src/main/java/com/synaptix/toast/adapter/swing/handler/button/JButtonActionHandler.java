@@ -29,13 +29,7 @@ public class JButtonActionHandler implements
 			// the window containing the button in a certain way
 			// happens with some SNCF dialog windows
 			if(SwingUtilities.isEventDispatchThread()){
-				try{
-					FestRobotInstance.getRobot().click(button);
-					return ResultKind.SUCCESS.name();
-				} catch(Exception e){
-					LOG.warn(e.getMessage(), e);
-					return ResultKind.SUCCESS.name();
-				}
+				return handleClickOnEDT(button, command);
 			} else {
 				final CountDownLatch latch = new CountDownLatch(1);
 				FestRobotInstance.runOutsideEDT(new Runnable() {
@@ -61,6 +55,20 @@ public class JButtonActionHandler implements
 			}
 		default:
 			throw new IllegalArgumentException("Unsupported command for JButton: " + command.action.name());
+		}
+	}
+	
+	private String handleClickOnEDT(final JButton button, CommandRequest command){
+		if(button.isEnabled()&&button.isShowing()){
+			FestRobotInstance.runOutsideEDT(new Runnable(){
+				@Override
+				public void run() {
+					FestRobotInstance.getRobot().click(button);
+				}
+			});
+			return ResultKind.SUCCESS.name();
+		}else {
+			return ResultKind.FAILURE.name();
 		}
 	}
 }
